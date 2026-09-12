@@ -20,8 +20,12 @@ import {
   type ErrorBoundaryProps,
   SplashScreen,
   Stack,
+  useRouter,
+  useSegments,
 } from 'expo-router';
 
+import { useAppStore } from '@/lib/store/useAppStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import { initPostHog } from '@/lib/posthog';
 import { registerServiceWorker } from '@/lib/registerServiceWorker';
 import { reportErrorToParent } from '@/lib/reportPreviewError';
@@ -42,6 +46,42 @@ function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 }
 
 export { ErrorBoundary };
+
+/**
+ * Routes the session: signed out → login, first run or 3+ days away →
+ * "Choose your community", freshly picked town → town splash, otherwise the app.
+ */
+function SessionGate() {
+  const router = useRouter();
+  const segments = useSegments();
+  const authHydrated = useAuthStore((s) => s.hydrated);
+  const user = useAuthStore((s) => s.user);
+  const appHydrated = useAppStore((s) => s.hydrated);
+  const welcomeRequired = useAppStore((s) => s.welcomeRequired);
+  const splashTown = useAppStore((s) => s.splashTown);
+
+  useEffect(() => {
+    if (!authHydrated || !appHydrated) return;
+    const root = segments[0];
+    const onGate = root === 'login' || root === 'welcome' || root === 'town-splash';
+
+    if (!user) {
+      if (root !== 'login') router.replace('/login');
+      return;
+    }
+    if (welcomeRequired) {
+      if (root !== 'welcome') router.replace('/welcome');
+      return;
+    }
+    if (splashTown) {
+      if (root !== 'town-splash') router.replace('/town-splash');
+      return;
+    }
+    if (onGate) router.replace('/(tabs)');
+  }, [authHydrated, appHydrated, user, welcomeRequired, splashTown, segments, router]);
+
+  return null;
+}
 
 // Starter is light-only by default. Remove this when implementing requested dark mode.
 Uniwind.setTheme('light');
@@ -141,9 +181,18 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ title: 'Habits', headerShown: false }} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#FFFFFF' },
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ title: 'MyElginHub' }} />
+          <Stack.Screen name="login" options={{ animation: 'fade' }} />
+          <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+          <Stack.Screen name="town-splash" options={{ animation: 'fade' }} />
         </Stack>
+        <SessionGate />
         <InstallPrompt />
       </HeroUINativeProvider>
     </GestureHandlerRootView>

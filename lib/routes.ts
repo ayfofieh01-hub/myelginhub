@@ -1,0 +1,30 @@
+import type { Href } from 'expo-router';
+import type { LiveWellSlug } from '@/lib/types';
+
+export const routes = {
+  home: '/(tabs)' as Href,
+  discover: '/(tabs)/discover' as Href,
+  post: '/(tabs)/post' as Href,
+  marketplace: '/(tabs)/marketplace' as Href,
+  profile: '/(tabs)/profile' as Href,
+  login: '/login' as Href,
+  welcome: '/welcome' as Href,
+  splash: '/town-splash' as Href,
+  newcomers: '/newcomers' as Href,
+  history: '/history' as Href,
+  explore: '/explore' as Href,
+  directory: '/directory' as Href,
+  jobs: '/jobs' as Href,
+  deals: '/deals' as Href,
+  news: '/news' as Href,
+  events: '/events' as Href,
+  notifications: '/notifications' as Href,
+  inbox: '/chat' as Href,
+  exploreCategory: (slug: string): Href => ({ pathname: '/explore/[slug]', params: { slug } }),
+  liveWell: (slug: LiveWellSlug): Href => ({ pathname: '/live-well/[slug]', params: { slug } }),
+  place: (id: string): Href => ({ pathname: '/place/[id]', params: { id } }),
+  newsItem: (id: string): Href => ({ pathname: '/news/[id]', params: { id } }),
+  event: (id: string): Href => ({ pathname: '/events/[id]', params: { id } }),
+  listing: (id: string): Href => ({ pathname: '/listing/[id]', params: { id } }),
+  thread: (id: string): Href => ({ pathname: '/chat/[id]', params: { id } }),
+};
